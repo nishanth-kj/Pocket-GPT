@@ -1,0 +1,73 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.pocketgpt.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.pocketgpt.app"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // Core Android X
+    implementation 'androidx.core:core:1.12.0'
+    
+    // Room Database
+    def room_version = "2.6.1"
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-common:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    // UI and Architecture Components
+    def lifecycle_version = "2.6.2"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-livedata:$lifecycle_version"
+    implementation "androidx.activity:activity:1.8.0"
+    implementation "androidx.recyclerview:recyclerview:1.3.2"
+    
+    // Splash Screen
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+}

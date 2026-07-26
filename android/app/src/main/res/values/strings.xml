@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Pocket GPT</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- Download Models Fragment -->
+    <string name="title_offline_ai_models">Offline AI Models</string>
+    <string name="desc_offline_ai_models">Download powerful Language Models to run locally on your device for absolute privacy.</string>
+
+    <string name="model_gemma_title">Gemma 2B (Google)</string>
+    <string name="model_gemma_size">Size: 1.4 GB - Fast &amp; Efficient</string>
+
+    <string name="model_llama_title">Llama-3 8B (Meta)</string>
+    <string name="model_llama_size">Size: 4.2 GB - Highly Capable</string>
+
+    <string name="model_mistral_title">Mistral v0.2 (Mistral AI)</string>
+    <string name="model_mistral_size">Size: 3.8 GB - Balanced Performance</string>
+
+    <string name="btn_download_model">Download Model</string>
+</resources>
