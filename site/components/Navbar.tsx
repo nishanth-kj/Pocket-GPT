@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
-import { BrainCircuit, Menu, X } from "lucide-react";
+import { BrainCircuit, Menu, X, Github } from "lucide-react";
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -30,13 +30,19 @@ export function Navbar() {
             <Link href="/privacy" className="text-sm font-medium text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white transition-colors">
               Privacy
             </Link>
-            <div className="pl-2 border-l border-black/10 dark:border-white/10">
+            <div className="pl-4 border-l border-black/10 dark:border-white/10 flex items-center gap-4">
+              <a href="https://github.com/nishanth-kj/Pocket-GPT" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white transition-colors" aria-label="GitHub Repository">
+                <Github className="h-5 w-5" />
+              </a>
               <ThemeToggle />
             </div>
           </div>
 
           {/* Mobile Menu Toggle */}
-          <div className="flex items-center md:hidden gap-2">
+          <div className="flex items-center md:hidden gap-3">
+            <a href="https://github.com/nishanth-kj/Pocket-GPT" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white transition-colors" aria-label="GitHub Repository">
+              <Github className="h-5 w-5" />
+            </a>
             <ThemeToggle />
             <button
               type="button"
