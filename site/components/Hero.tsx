@@ -15,10 +15,7 @@ export function Hero() {
           
           {/* Text Content */}
           <div className="text-center w-full max-w-4xl mx-auto flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium mb-6 ring-1 ring-inset ring-blue-500/20">
-              <Shield className="h-4 w-4" />
-              100% Offline & Private
-            </div>
+           
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-foreground leading-[1.1]">
               Your Personal <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
