@@ -18,7 +18,6 @@ public class HomeFragment extends Fragment {
         
         MaterialCardView cardSearch = view.findViewById(R.id.cardSearch);
         MaterialCardView cardBookmarks = view.findViewById(R.id.cardBookmarks);
-        MaterialCardView cardCases = view.findViewById(R.id.cardCases);
         
         cardSearch.setOnClickListener(v -> {
             Toast.makeText(getContext(), "Navigating to Search...", Toast.LENGTH_SHORT).show();
@@ -26,7 +25,6 @@ public class HomeFragment extends Fragment {
         });
         
         cardBookmarks.setOnClickListener(v -> Toast.makeText(getContext(), "Quick Bookmarks Clicked", Toast.LENGTH_SHORT).show());
-        cardCases.setOnClickListener(v -> Toast.makeText(getContext(), "Quick Cases Clicked", Toast.LENGTH_SHORT).show());
         
         return view;
     }

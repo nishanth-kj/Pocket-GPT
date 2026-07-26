@@ -21,7 +21,7 @@
             android:id="@+id/searchEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Search documents, cases, acts..."
+            android:hint="Search documents, acts..."
             android:inputType="text"
             android:maxLines="1"
             android:imeOptions="actionSearch" />
