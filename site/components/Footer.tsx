@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github } from "lucide-react";
+import { GithubIcon } from "./GithubIcon";
 
 export function Footer() {
   return (
@@ -21,7 +21,7 @@ export function Footer() {
             </Link>
             <div className="pl-2 ml-2 border-l border-black/10 dark:border-white/10 flex items-center">
               <a href="https://github.com/nishanth-kj/Pocket-GPT" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white transition-colors" aria-label="GitHub Repository">
-                <Github className="h-5 w-5" />
+                <GithubIcon className="h-5 w-5" />
               </a>
             </div>
           </div>
