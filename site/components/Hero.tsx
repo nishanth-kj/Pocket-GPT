@@ -3,13 +3,13 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-background min-h-[calc(100vh-4rem)] flex items-center py-16 md:py-24 lg:py-32">
+    <section className="relative overflow-hidden bg-background py-16 md:py-24 lg:py-32">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
       <div className="absolute top-0 right-0 -mr-40 mt-10 opacity-30 dark:opacity-20 blur-3xl rounded-full bg-blue-400 w-96 h-96 mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 -ml-40 mb-10 opacity-30 dark:opacity-20 blur-3xl rounded-full bg-purple-400 w-96 h-96 mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
 
-      <div className="container mx-auto px-6 lg:px-8 w-full max-w-7xl relative z-10">
+      <div className="container mx-auto px-8 md:px-12 lg:px-24 w-full max-w-7xl relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
           
           {/* Text Content */}

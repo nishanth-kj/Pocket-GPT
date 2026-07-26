@@ -3,9 +3,9 @@ import { Download } from "lucide-react";
 
 export function CallToAction() {
   return (
-    <section className="py-24 bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
+    <section className="py-16 md:py-24 lg:py-32 bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
       <div className="absolute inset-0 bg-blue-600/5 dark:bg-blue-600/10 [mask-image:linear-gradient(to_bottom,transparent,black,transparent)]" />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+      <div className="container mx-auto px-8 md:px-12 lg:px-24 max-w-7xl relative z-10 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-6">
           Ready to take back control of your data?
         </h2>

@@ -20,8 +20,8 @@ const features = [
 
 export function Features() {
   return (
-    <section className="py-24 bg-zinc-50 dark:bg-zinc-950">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-16 md:py-24 lg:py-32 bg-zinc-50 dark:bg-zinc-950">
+      <div className="container mx-auto px-8 md:px-12 lg:px-24 max-w-7xl">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Everything you need, nothing you don't.

@@ -1,7 +1,7 @@
 export function HowItWorks() {
   return (
-    <section className="py-24 bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-16 md:py-24 lg:py-32 bg-background">
+      <div className="container mx-auto px-8 md:px-12 lg:px-24 max-w-7xl">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           <div className="flex-1 lg:order-2">
             <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-6">
