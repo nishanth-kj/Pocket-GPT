@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-background pt-8 pb-16 md:pt-12 md:pb-24 lg:pt-16 lg:pb-32">
+    <section className="relative overflow-hidden bg-background min-h-[calc(100vh-4rem)] flex items-center py-12 md:py-16">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
       <div className="absolute top-0 right-0 -mr-40 mt-10 opacity-30 dark:opacity-20 blur-3xl rounded-full bg-blue-400 w-96 h-96 mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
@@ -46,8 +46,8 @@ export function Hero() {
           </div>
           
           {/* App Preview Mockup */}
-          <div className="flex-1 w-full max-w-lg lg:max-w-none flex justify-center lg:justify-end">
-            <div className="relative aspect-[9/19] w-full max-w-[320px] rounded-[2.5rem] border-[8px] border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-hidden flex flex-col transform lg:rotate-2 hover:rotate-0 transition-transform duration-500">
+          <div className="flex-1 w-full max-w-lg lg:max-w-none flex justify-center lg:justify-end mt-12 lg:mt-0">
+            <div className="relative aspect-[9/19] w-full max-w-[260px] lg:max-w-[300px] rounded-[2.5rem] border-[8px] border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-hidden flex flex-col transform lg:rotate-2 hover:rotate-0 transition-transform duration-500">
               
               {/* App Header */}
               <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-10 sticky top-0">
