@@ -3,8 +3,8 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-background py-24 sm:py-32">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-background min-h-[calc(100vh-4rem)] flex items-center py-12 sm:py-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-foreground">
