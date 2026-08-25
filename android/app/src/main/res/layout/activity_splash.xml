@@ -2,13 +2,16 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@android:color/white">
 
     <TextView
+        android:id="@+id/typingTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="Pocket GPT"
-        android:textSize="32sp"
-        android:textStyle="bold" />
+        android:text=""
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black" />
+
 </FrameLayout>

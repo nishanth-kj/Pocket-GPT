@@ -1,18 +1,19 @@
 package com.pocketgpt.app.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.pocketgpt.app.R;
 import com.pocketgpt.app.databinding.ActivityMainBinding;
-import com.pocketgpt.app.ui.fragments.AiChatFragment;
-import com.pocketgpt.app.ui.fragments.DownloadModelsFragment;
-import com.pocketgpt.app.ui.fragments.HomeFragment;
-import com.pocketgpt.app.ui.fragments.SearchFragment;
+import com.pocketgpt.app.ui.activities.ChatActivity;
+import com.pocketgpt.app.ui.activities.ProfileActivity;
+import com.pocketgpt.app.ui.home.HomeFragment;
+import com.pocketgpt.app.ui.documents.DocumentsFragment;
+import com.pocketgpt.app.ui.models.AiModelsFragment;
+import com.pocketgpt.app.ui.settings.SettingsFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,7 +21,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -32,17 +32,14 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 switchFragment(new HomeFragment());
-                binding.bottomNavigation.setSelectedItemId(R.id.bottom_home);
             } else if (id == R.id.nav_search) {
-                switchFragment(new SearchFragment());
-                binding.bottomNavigation.setSelectedItemId(R.id.bottom_search);
+                switchFragment(new DocumentsFragment());
             } else if (id == R.id.nav_bookmarks) {
                 Toast.makeText(this, "Bookmarks Clicked", Toast.LENGTH_SHORT).show();
             } else if (id == R.id.nav_download_models) {
-                switchFragment(new DownloadModelsFragment());
-                binding.bottomNavigation.setSelectedItemId(R.id.bottom_model);
+                switchFragment(new AiModelsFragment());
             } else if (id == R.id.nav_settings) {
-                showThemeDialog();
+                switchFragment(new SettingsFragment());
             }
             binding.drawerLayout.closeDrawer(GravityCompat.START);
             return true;
@@ -54,19 +51,19 @@ public class MainActivity extends AppCompatActivity {
                 switchFragment(new HomeFragment());
                 return true;
             } else if (id == R.id.bottom_search) {
-                switchFragment(new SearchFragment());
+                switchFragment(new DocumentsFragment());
                 return true;
             } else if (id == R.id.bottom_model) {
-                Toast.makeText(this, "Model Clicked", Toast.LENGTH_SHORT).show();
+                switchFragment(new AiModelsFragment());
                 return true;
             } else if (id == R.id.bottom_profile) {
-                Toast.makeText(this, "Profile Clicked", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, ProfileActivity.class));
                 return true;
             }
             return false;
         });
 
-        binding.fabAiChat.setOnClickListener(v -> switchFragment(new AiChatFragment()));
+        binding.fabAiChat.setOnClickListener(v -> startActivity(new Intent(this, ChatActivity.class)));
 
         if (savedInstanceState == null) {
             switchFragment(new HomeFragment());
@@ -76,19 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void switchFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out, android.R.anim.fade_in, android.R.anim.fade_out)
                 .replace(R.id.fragment_container, fragment)
                 .commit();
-    }
-
-    private void showThemeDialog() {
-        String[] themes = {"System Default", "Light", "Dark"};
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Choose Theme")
-                .setSingleChoiceItems(themes, 0, (dialog, which) -> {
-                    Toast.makeText(this, "Theme set to: " + themes[which], Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                })
-                .show();
     }
 }

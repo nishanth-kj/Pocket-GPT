@@ -1,4 +1,4 @@
-package com.pocketgpt.app;
+package com.pocketgpt.app.ui.home;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.card.MaterialCardView;
+import com.pocketgpt.app.R;
 
 public class HomeFragment extends Fragment {
     @Nullable
