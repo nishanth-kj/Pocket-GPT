@@ -55,8 +55,12 @@ public class RagEngine {
         }
 
         // 1. Retrieve Candidate Chunks
+        // specificDocId == -1 means "No Context (General Offline AI)": skip retrieval entirely.
+        // specificDocId == null means "All Documents". A positive id targets a single document.
         List<DocumentChunk> candidates;
-        if (specificDocId != null && specificDocId > 0) {
+        if (specificDocId != null && specificDocId == -1) {
+            candidates = Collections.emptyList();
+        } else if (specificDocId != null && specificDocId > 0) {
             candidates = dao.getChunksForDocument(specificDocId);
         } else {
             candidates = dao.getAllChunks();

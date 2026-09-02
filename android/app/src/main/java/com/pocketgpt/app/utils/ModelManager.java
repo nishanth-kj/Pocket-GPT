@@ -32,6 +32,7 @@ public class ModelManager {
     private final SharedPreferences prefs;
     private final Map<String, AiModel> modelCatalog = new LinkedHashMap<>();
     private final Map<String, HttpURLConnection> activeDownloads = new ConcurrentHashMap<>();
+    private final java.util.Set<String> cancelledDownloads = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final ExecutorService downloadExecutor = Executors.newFixedThreadPool(2);
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private File modelsDir;
@@ -270,6 +271,7 @@ public class ModelManager {
     }
 
     public void cancelDownload(String modelId) {
+        cancelledDownloads.add(modelId);
         HttpURLConnection conn = activeDownloads.remove(modelId);
         if (conn != null) {
             try {
@@ -303,6 +305,7 @@ public class ModelManager {
         model.setDownloading(true);
         model.setDownloadProgress(0);
         model.setDownloadStatusMessage("Connecting to server...");
+        cancelledDownloads.remove(modelId);
 
         downloadExecutor.execute(() -> {
             File partFile = new File(modelsDir, model.getFileName() + ".part");
@@ -319,19 +322,30 @@ public class ModelManager {
                 // Handle HTTP redirects (Hugging Face CDN redirects)
                 int redirects = 0;
                 while (redirects < 6) {
+                    if (cancelledDownloads.contains(modelId)) {
+                        throw new java.io.InterruptedIOException("Download cancelled");
+                    }
                     conn = (HttpURLConnection) url.openConnection();
                     conn.setConnectTimeout(30000);
                     conn.setReadTimeout(60000);
                     conn.setInstanceFollowRedirects(true);
                     conn.setRequestProperty("User-Agent", "Pocket-GPT-Mobile/1.0");
 
+                    // Register the connection before the blocking call so cancelDownload()
+                    // can disconnect it even while still waiting on the server response.
+                    activeDownloads.put(modelId, conn);
+
                     int responseCode = conn.getResponseCode();
+                    if (cancelledDownloads.contains(modelId)) {
+                        throw new java.io.InterruptedIOException("Download cancelled");
+                    }
                     if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
                             || responseCode == HttpURLConnection.HTTP_MOVED_TEMP
                             || responseCode == 307
                             || responseCode == 308) {
                         String newLocation = conn.getHeaderField("Location");
                         conn.disconnect();
+                        activeDownloads.remove(modelId);
                         url = new URL(newLocation);
                         redirects++;
                     } else {
@@ -430,15 +444,21 @@ public class ModelManager {
                     partFile.delete();
                 }
                 activeDownloads.remove(modelId);
+                boolean wasCancelled = cancelledDownloads.remove(modelId);
                 model.setDownloading(false);
                 model.setDownloadProgress(0);
-                model.setDownloadStatusMessage("Download error");
 
-                if (listener != null) {
-                    mainHandler.post(() -> listener.onError(modelId,
-                            e.getMessage() != null ? e.getMessage() : "Download failed"));
+                if (wasCancelled) {
+                    model.setDownloadStatusMessage("Cancelled");
+                } else {
+                    model.setDownloadStatusMessage("Download error");
+                    if (listener != null) {
+                        mainHandler.post(() -> listener.onError(modelId,
+                                e.getMessage() != null ? e.getMessage() : "Download failed"));
+                    }
                 }
             } finally {
+                cancelledDownloads.remove(modelId);
                 try {
                     if (fos != null)
                         fos.close();

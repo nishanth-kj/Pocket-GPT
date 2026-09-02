@@ -50,6 +50,13 @@ public class AiModelsAdapter extends RecyclerView.Adapter<AiModelsAdapter.ViewHo
         return models.size();
     }
 
+    private static void safeNotifyItemChanged(AiModelsAdapter adapter, RecyclerView.ViewHolder holder) {
+        int position = holder.getAdapterPosition();
+        if (position != RecyclerView.NO_POSITION) {
+            adapter.notifyItemChanged(position);
+        }
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textModelName;
         private final TextView textModelDetails;
@@ -84,7 +91,7 @@ public class AiModelsAdapter extends RecyclerView.Adapter<AiModelsAdapter.ViewHo
             }
             textModelDetails.setText(details);
 
-            if (model.isActive()) {
+            if (model.isActive() && model.isDownloaded()) {
                 chipModelStatus.setVisibility(View.VISIBLE);
                 chipModelStatus.setText("ACTIVE");
                 btnDownload.setVisibility(View.GONE);
@@ -123,7 +130,7 @@ public class AiModelsAdapter extends RecyclerView.Adapter<AiModelsAdapter.ViewHo
                 if (model.isDownloading()) {
                     manager.cancelDownload(model.getId());
                     Toast.makeText(context, "Download cancelled", Toast.LENGTH_SHORT).show();
-                    adapter.notifyItemChanged(getAdapterPosition());
+                    safeNotifyItemChanged(adapter, this);
                     return;
                 }
 
@@ -131,7 +138,7 @@ public class AiModelsAdapter extends RecyclerView.Adapter<AiModelsAdapter.ViewHo
                 manager.downloadModel(model.getId(), new ModelManager.ModelDownloadListener() {
                     @Override
                     public void onProgress(String modelId, int progressPercent, String statusMessage) {
-                        adapter.notifyItemChanged(getAdapterPosition());
+                        safeNotifyItemChanged(adapter, ViewHolder.this);
                     }
 
                     @Override
@@ -143,10 +150,10 @@ public class AiModelsAdapter extends RecyclerView.Adapter<AiModelsAdapter.ViewHo
                     @Override
                     public void onError(String modelId, String errorMessage) {
                         Toast.makeText(context, "Download failed: " + errorMessage, Toast.LENGTH_LONG).show();
-                        adapter.notifyItemChanged(getAdapterPosition());
+                        safeNotifyItemChanged(adapter, ViewHolder.this);
                     }
                 });
-                adapter.notifyItemChanged(getAdapterPosition());
+                safeNotifyItemChanged(adapter, this);
             });
 
             btnSetActive.setOnClickListener(v -> {
