@@ -1,7 +1,10 @@
 package com.pocketgpt.app.ui;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Build;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
@@ -32,12 +35,15 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 switchFragment(new HomeFragment());
+                binding.bottomNavigation.setSelectedItemId(R.id.bottom_home);
             } else if (id == R.id.nav_search) {
                 switchFragment(new DocumentsFragment());
-            } else if (id == R.id.nav_bookmarks) {
-                Toast.makeText(this, "Bookmarks Clicked", Toast.LENGTH_SHORT).show();
+                binding.bottomNavigation.setSelectedItemId(R.id.bottom_search);
+            } else if (id == R.id.nav_ai_chat || id == R.id.nav_bookmarks) {
+                startActivity(new Intent(this, ChatActivity.class));
             } else if (id == R.id.nav_download_models) {
                 switchFragment(new AiModelsFragment());
+                binding.bottomNavigation.setSelectedItemId(R.id.bottom_model);
             } else if (id == R.id.nav_settings) {
                 switchFragment(new SettingsFragment());
             }
@@ -64,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.fabAiChat.setOnClickListener(v -> startActivity(new Intent(this, ChatActivity.class)));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
+        }
 
         if (savedInstanceState == null) {
             switchFragment(new HomeFragment());

@@ -2,5 +2,28 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="ic_launcher_background">#008577</color>
+    
+    <!-- Purple & Light Purple Palette (Light Mode) -->
+    <color name="md_theme_light_primary">#6750A4</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#EADDFF</color>
+    <color name="md_theme_light_onPrimaryContainer">#21005D</color>
+    
+    <color name="md_theme_light_secondary">#7C3AED</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#F3E8FF</color>
+    <color name="md_theme_light_onSecondaryContainer">#4C1D95</color>
+    
+    <color name="md_theme_light_background">#FAF8FD</color>
+    <color name="md_theme_light_onBackground">#1D1B20</color>
+    
+    <color name="md_theme_light_surface">#FFFFFF</color>
+    <color name="md_theme_light_onSurface">#1D1B20</color>
+    <color name="md_theme_light_surfaceContainer">#F7F2FA</color>
+    <color name="md_theme_light_surfaceContainerLow">#FEF7FF</color>
+    <color name="md_theme_light_surfaceContainerHigh">#ECE6F0</color>
+    
+    <color name="md_theme_light_outline">#79747E</color>
+    <color name="md_theme_light_outlineVariant">#E9D5FF</color>
+    <color name="md_theme_light_error">#BA1A1A</color>
 </resources>

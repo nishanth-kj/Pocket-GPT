@@ -6,13 +6,30 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.pocketgpt.app.R;
+import com.pocketgpt.app.model.AppDocument;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHolder> {
-    private List<String> documents = new ArrayList<>();
 
-    public void setDocuments(List<String> documents) {
+    public interface DocumentActionListener {
+        void onChatClicked(AppDocument document);
+        void onDeleteClicked(AppDocument document);
+        void onItemClicked(AppDocument document);
+    }
+
+    private List<AppDocument> documents = new ArrayList<>();
+    private DocumentActionListener listener;
+
+    public void setListener(DocumentActionListener listener) {
+        this.listener = listener;
+    }
+
+    public void setDocuments(List<AppDocument> documents) {
         this.documents = documents == null ? new ArrayList<>() : documents;
         notifyDataSetChanged();
     }
@@ -20,13 +37,14 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_legal_document, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.textView.setText(documents.get(position));
+        AppDocument doc = documents.get(position);
+        holder.bind(doc, listener);
     }
 
     @Override
@@ -35,10 +53,47 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+        private final TextView textTitle;
+        private final Chip textType;
+        private final TextView textContentSnippet;
+        private final TextView textChunkBadge;
+        private final MaterialButton btnDeleteDoc;
+        private final MaterialButton btnChatDoc;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            textView = itemView.findViewById(android.R.id.text1);
+            textTitle = itemView.findViewById(R.id.textTitle);
+            textType = itemView.findViewById(R.id.textType);
+            textContentSnippet = itemView.findViewById(R.id.textContentSnippet);
+            textChunkBadge = itemView.findViewById(R.id.textChunkBadge);
+            btnDeleteDoc = itemView.findViewById(R.id.btnDeleteDoc);
+            btnChatDoc = itemView.findViewById(R.id.btnChatDoc);
+        }
+
+        public void bind(AppDocument doc, DocumentActionListener listener) {
+            textTitle.setText(doc.title);
+            textType.setText(doc.documentType != null ? doc.documentType : "DOC");
+
+            String snippet = doc.content != null ? doc.content.replace("\n", " ").trim() : "";
+            if (snippet.length() > 160) {
+                snippet = snippet.substring(0, 160) + "...";
+            }
+            textContentSnippet.setText(snippet);
+
+            int chunkCount = doc.chunkCount;
+            textChunkBadge.setText(chunkCount + " Vector Chunks");
+
+            btnChatDoc.setOnClickListener(v -> {
+                if (listener != null) listener.onChatClicked(doc);
+            });
+
+            btnDeleteDoc.setOnClickListener(v -> {
+                if (listener != null) listener.onDeleteClicked(doc);
+            });
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClicked(doc);
+            });
         }
     }
-}
+}

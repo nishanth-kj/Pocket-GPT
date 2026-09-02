@@ -21,8 +21,12 @@ public class ChatActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
 
         if (savedInstanceState == null) {
+            ChatFragment fragment = new ChatFragment();
+            if (getIntent() != null && getIntent().getExtras() != null) {
+                fragment.setArguments(getIntent().getExtras());
+            }
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new ChatFragment())
+                    .replace(R.id.fragment_container, fragment)
                     .commit();
         }
     }

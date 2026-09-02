@@ -70,4 +70,7 @@ dependencies {
     
     // Splash Screen
     implementation 'androidx.core:core-splashscreen:1.0.1'
+
+    // On-device OCR (Latin text recognition, bundled model)
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
 }
