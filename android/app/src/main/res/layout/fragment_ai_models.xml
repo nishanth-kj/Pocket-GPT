@@ -9,23 +9,76 @@
     android:background="?android:attr/colorBackground"
     tools:context="com.pocketgpt.app.ui.models.AiModelsFragment">
 
+    <!-- Active Model Status Banner -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardActiveModelSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="?attr/colorPrimaryContainer"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_ai"
+                app:tint="?attr/colorOnPrimaryContainer" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="14dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textActiveModelBannerTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Active Engine: Gemma 2B"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textActiveModelBannerSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="100% On-Device Offline Inference Ready"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:alpha="0.85" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="20dp"
-        android:text="Offline AI Models"
-        android:textAppearance="?attr/textAppearanceHeadline5"
+        android:text="Available Offline AI Models"
+        android:textAppearance="?attr/textAppearanceHeadline6"
         android:textStyle="bold" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp"
-        android:text="Download powerful Language Models to run locally on your device for absolute privacy."
-        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="12dp"
+        android:text="Select and download Small Language Models (SLMs) to run locally on your phone with zero internet required."
+        android:textAppearance="?attr/textAppearanceBodySmall"
         android:textColor="?android:attr/textColorSecondary" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -38,3 +91,4 @@
         tools:listitem="@layout/item_ai_model" />
 
 </LinearLayout>
+

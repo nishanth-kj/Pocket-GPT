@@ -32,12 +32,15 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 switchFragment(new HomeFragment());
+                binding.bottomNavigation.setSelectedItemId(R.id.bottom_home);
             } else if (id == R.id.nav_search) {
                 switchFragment(new DocumentsFragment());
-            } else if (id == R.id.nav_bookmarks) {
-                Toast.makeText(this, "Bookmarks Clicked", Toast.LENGTH_SHORT).show();
+                binding.bottomNavigation.setSelectedItemId(R.id.bottom_search);
+            } else if (id == R.id.nav_ai_chat || id == R.id.nav_bookmarks) {
+                startActivity(new Intent(this, ChatActivity.class));
             } else if (id == R.id.nav_download_models) {
                 switchFragment(new AiModelsFragment());
+                binding.bottomNavigation.setSelectedItemId(R.id.bottom_model);
             } else if (id == R.id.nav_settings) {
                 switchFragment(new SettingsFragment());
             }

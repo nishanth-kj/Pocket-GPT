@@ -22,7 +22,7 @@
             android:id="@+id/searchEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Search documents, acts..."
+            android:hint="Search indexed documents &amp; chunks..."
             android:inputType="text"
             android:maxLines="1"
             android:imeOptions="actionSearch" />
@@ -33,6 +33,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintTop_toBottomOf="@id/searchInputLayout"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -48,17 +50,55 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/emptyStateText"
+    <LinearLayout
+        android:id="@+id/emptyStateContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No documents found."
-        android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:textColor="?android:attr/textColorSecondary"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="@id/recyclerView"
         app:layout_constraintBottom_toBottomOf="@id/recyclerView"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/emptyStateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No documents in local knowledge base."
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?android:attr/textColorSecondary"
+            android:gravity="center" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLoadSamples"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Load Sample Privacy &amp; Legal Docs"
+            app:icon="@drawable/ic_document" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnUploadFirstDoc"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Upload PDF / File"
+            app:icon="@drawable/ic_attach" />
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabAddDocument"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text="Add Document"
+        app:icon="@drawable/ic_add"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

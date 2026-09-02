@@ -5,6 +5,8 @@ import androidx.room.PrimaryKey;
 import com.pocketgpt.app.constants.AppConstants;
 import com.pocketgpt.app.constants.AppConstants.Status;
 
+import androidx.room.Ignore;
+
 @Entity(tableName = "app_documents")
 public class AppDocument {
     @PrimaryKey(autoGenerate = true)
@@ -14,16 +16,29 @@ public class AppDocument {
     
     public String content;
     
-    public String documentType; // e.g., "BARE_ACT", "JUDGMENT", "TEMPLATE"
+    public String documentType; // e.g., "PDF", "TEXT", "OCR", "BARE_ACT", "NOTE"
     
-    public String date; // e.g., judgment date or enactment date
+    public String date; // e.g., date formatted
     
+    public int chunkCount = 0;
+
     public int status = Status.ACTIVE.getCode();
     
     public long createdAt = System.currentTimeMillis();
     
     public long updatedAt = System.currentTimeMillis();
 
-    // Optional: store embeddings later
-    // public byte[] embedding;
+    public AppDocument() {
+    }
+
+    @Ignore
+    public AppDocument(String title, String content, String documentType, String date) {
+        this.title = title;
+        this.content = content;
+        this.documentType = documentType;
+        this.date = date;
+        this.createdAt = System.currentTimeMillis();
+        this.updatedAt = System.currentTimeMillis();
+    }
 }
+
