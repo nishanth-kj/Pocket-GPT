@@ -47,11 +47,14 @@ public class PdfViewerFragment extends Fragment {
 
         int docId = getArguments() != null ? getArguments().getInt(ARG_DOCUMENT_ID, -1) : -1;
         if (docId > 0) {
+            android.content.Context appContext = requireContext().getApplicationContext();
             new Thread(() -> {
-                SearchDao dao = PocketGptDatabase.getDatabase(requireContext()).searchDao();
-                currentDoc = dao.getDocumentById(docId);
-                if (currentDoc != null && getActivity() != null) {
+                SearchDao dao = PocketGptDatabase.getDatabase(appContext).searchDao();
+                AppDocument doc = dao.getDocumentById(docId);
+                if (doc != null && isAdded() && getActivity() != null) {
+                    currentDoc = doc;
                     getActivity().runOnUiThread(() -> {
+                        if (!isAdded()) return;
                         textViewerTitle.setText(currentDoc.title);
                         textViewerMeta.setText("Type: " + currentDoc.documentType + " • " + currentDoc.chunkCount + " Vector Chunks");
                         textViewerContent.setText(currentDoc.content);

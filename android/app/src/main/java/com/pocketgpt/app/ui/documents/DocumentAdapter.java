@@ -80,7 +80,7 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             }
             textContentSnippet.setText(snippet);
 
-            int chunkCount = doc.chunkCount > 0 ? doc.chunkCount : 1;
+            int chunkCount = doc.chunkCount;
             textChunkBadge.setText(chunkCount + " Vector Chunks");
 
             btnChatDoc.setOnClickListener(v -> {

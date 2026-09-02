@@ -26,6 +26,7 @@ public class ModelManager {
     private static final String PREFS_NAME = "pocketgpt_models_prefs";
     private static final String KEY_ACTIVE_MODEL = "active_model_id";
     private static final String KEY_CUSTOM_DIR = "custom_models_directory";
+    private static final String DEFAULT_MODEL_ID = "smollm-135m";
 
     private static volatile ModelManager INSTANCE;
     private final Context context;
@@ -256,13 +257,15 @@ public class ModelManager {
             model.setLocalFileSizeBytes(0);
 
             if (modelId.equals(getActiveModelId())) {
-                // Find first downloaded model or fallback
+                // Find first downloaded model or fallback to the safe default
+                AiModel replacement = null;
                 for (AiModel m : modelCatalog.values()) {
                     if (m.isDownloaded()) {
-                        setActiveModel(m.getId());
+                        replacement = m;
                         break;
                     }
                 }
+                setActiveModel(replacement != null ? replacement.getId() : DEFAULT_MODEL_ID);
             }
             refreshModelState();
             return true;

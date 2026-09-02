@@ -157,7 +157,6 @@ public class DocumentsFragment extends Fragment implements DocumentAdapter.Docum
 
     private void showCustomNoteDialog() {
         if (getContext() == null) return;
-        View dialogView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_2, null);
         EditText inputTitle = new EditText(getContext());
         inputTitle.setHint("Document Title");
         EditText inputContent = new EditText(getContext());
