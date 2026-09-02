@@ -1,7 +1,10 @@
 package com.pocketgpt.app.ui;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Build;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
@@ -67,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.fabAiChat.setOnClickListener(v -> startActivity(new Intent(this, ChatActivity.class)));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
+        }
 
         if (savedInstanceState == null) {
             switchFragment(new HomeFragment());

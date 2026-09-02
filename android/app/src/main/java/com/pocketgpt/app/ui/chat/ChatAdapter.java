@@ -4,6 +4,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.text.Html;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -126,7 +127,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textAssistantStats.setText(model);
 
             // Render formatted markdown/bold text cleanly
-            String formattedHtml = message.getContent()
+            String formattedHtml = TextUtils.htmlEncode(message.getContent())
                     .replace("\n", "<br/>")
                     .replaceAll("\\*\\*(.*?)\\*\\*", "<b>$1</b>")
                     .replaceAll("\\*(.*?)\\*", "<i>$1</i>");
@@ -177,5 +178,4 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 }
-
 

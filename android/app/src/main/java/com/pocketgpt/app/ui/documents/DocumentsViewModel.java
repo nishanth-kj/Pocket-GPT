@@ -114,4 +114,10 @@ public class DocumentsViewModel extends AndroidViewModel {
             }
         });
     }
-}
+
+    @Override
+    protected void onCleared() {
+        executor.shutdown();
+        super.onCleared();
+    }
+}

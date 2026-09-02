@@ -3,6 +3,7 @@ package com.pocketgpt.app.ui.settings;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,8 +76,11 @@ public class SettingsFragment extends Fragment {
                     .setTitle("Clear All Data")
                     .setMessage("This will wipe all documents, vector embeddings, chunk records, and chat history from the device. Are you sure?")
                     .setPositiveButton("Clear Everything", (dialog, which) -> {
+                        Context context = getContext();
+                        if (context == null) return;
+                        final Context appContext = context.getApplicationContext();
                         new Thread(() -> {
-                            PocketGptDatabase db = PocketGptDatabase.getDatabase(requireContext());
+                            PocketGptDatabase db = PocketGptDatabase.getDatabase(appContext);
                             db.searchDao().clearAllChunks();
                             db.searchDao().clearAllDocuments();
                             db.chatDao().clearAllMessages();

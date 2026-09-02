@@ -2,6 +2,7 @@ package com.pocketgpt.app.ui.documents;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -190,7 +191,9 @@ public class DocumentsFragment extends Fragment implements DocumentAdapter.Docum
     }
 
     private void processImportFile(Uri uri) {
-        if (getContext() == null) return;
+        Context context = getContext();
+        if (context == null) return;
+        final Context appContext = context.getApplicationContext();
         String fileName = getFileName(uri);
         if (fileName == null) fileName = "Document_" + System.currentTimeMillis();
         final String docTitle = fileName;
@@ -201,9 +204,9 @@ public class DocumentsFragment extends Fragment implements DocumentAdapter.Docum
             try {
                 String extractedText;
                 if (docTitle.toLowerCase().endsWith(".pdf")) {
-                    extractedText = pdfService.extractTextFromUri(requireContext(), uri);
+                    extractedText = pdfService.extractTextFromUri(appContext, uri);
                 } else {
-                    extractedText = extractPlainTextFromUri(uri);
+                    extractedText = extractPlainTextFromUri(appContext, uri);
                 }
 
                 if (extractedText == null || extractedText.trim().isEmpty()) {
@@ -229,7 +232,9 @@ public class DocumentsFragment extends Fragment implements DocumentAdapter.Docum
     }
 
     private void processImportImage(Uri imageUri) {
-        if (getContext() == null) return;
+        Context context = getContext();
+        if (context == null) return;
+        final Context appContext = context.getApplicationContext();
         String fileName = getFileName(imageUri);
         if (fileName == null) fileName = "Scanned_Doc_" + System.currentTimeMillis();
         final String docTitle = fileName;
@@ -238,7 +243,7 @@ public class DocumentsFragment extends Fragment implements DocumentAdapter.Docum
 
         new Thread(() -> {
             try {
-                String ocrText = ocrService.extractTextFromUri(requireContext(), imageUri);
+                String ocrText = ocrService.extractTextFromUri(appContext, imageUri);
                 viewModel.ingestDocument(docTitle, ocrText, "OCR", () -> {
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() ->
@@ -256,9 +261,8 @@ public class DocumentsFragment extends Fragment implements DocumentAdapter.Docum
         }).start();
     }
 
-    private String extractPlainTextFromUri(Uri uri) {
-        if (getContext() == null) return "";
-        try (InputStream is = getContext().getContentResolver().openInputStream(uri);
+    private String extractPlainTextFromUri(Context context, Uri uri) {
+        try (InputStream is = context.getContentResolver().openInputStream(uri);
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             StringBuilder sb = new StringBuilder();
             String line;

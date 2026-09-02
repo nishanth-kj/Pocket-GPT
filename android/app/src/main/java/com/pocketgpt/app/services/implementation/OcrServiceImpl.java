@@ -25,8 +25,9 @@ public class OcrServiceImpl implements OcrService {
     @Override
     public String extractText(Bitmap image) {
         if (image == null) return "";
+        TextRecognizer recognizer = null;
         try {
-            TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+            recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
             InputImage inputImage = InputImage.fromBitmap(image, 0);
             Text result = Tasks.await(recognizer.process(inputImage), RECOGNITION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             String recognizedText = result.getText();
@@ -39,6 +40,10 @@ public class OcrServiceImpl implements OcrService {
             e.printStackTrace();
             return "Scanned Document Image [" + image.getWidth() + "x" + image.getHeight() + " px]\n\n" +
                    "Text recognition failed for this image.";
+        } finally {
+            if (recognizer != null) {
+                recognizer.close();
+            }
         }
     }
 
@@ -54,4 +59,3 @@ public class OcrServiceImpl implements OcrService {
         }
     }
 }
-
