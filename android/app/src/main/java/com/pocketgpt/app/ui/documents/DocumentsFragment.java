@@ -210,7 +210,12 @@ public class DocumentsFragment extends Fragment implements DocumentAdapter.Docum
                 }
 
                 if (extractedText == null || extractedText.trim().isEmpty()) {
-                    extractedText = "Content extracted from " + docTitle + " for on-device RAG.";
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() ->
+                                Toast.makeText(appContext, "No text could be extracted from " + docTitle, Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                    return;
                 }
 
                 String docType = docTitle.toLowerCase().endsWith(".pdf") ? "PDF" : "TEXT";
