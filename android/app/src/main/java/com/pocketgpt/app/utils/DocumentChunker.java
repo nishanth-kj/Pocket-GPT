@@ -1,6 +1,7 @@
 package com.pocketgpt.app.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DocumentChunker {
@@ -19,18 +20,24 @@ public class DocumentChunker {
     }
 
     public static List<String> chunkText(String text, int chunkSize, int overlap) {
-        List<String> chunks = new ArrayList<>();
         if (text == null || text.isEmpty()) {
-            return chunks;
+            return new ArrayList<>();
         }
 
+        // Try fast native C++ chunking
+        String[] nativeChunks = NativeEngine.chunkTextNative(text, chunkSize, overlap);
+        if (nativeChunks != null && nativeChunks.length > 0) {
+            return Arrays.asList(nativeChunks);
+        }
+
+        // Fallback Java chunker
+        List<String> chunks = new ArrayList<>();
         int length = text.length();
         int start = 0;
 
         while (start < length) {
             int end = Math.min(start + chunkSize, length);
-            
-            // Try to not break words in half if possible
+
             if (end < length) {
                 int lastSpace = text.lastIndexOf(' ', end);
                 if (lastSpace > start + overlap) {
@@ -39,11 +46,9 @@ public class DocumentChunker {
             }
 
             chunks.add(text.substring(start, end).trim());
-            
-            // Move start forward, accounting for overlap
+
             start = end - overlap;
-            
-            // Prevent infinite loop if overlap is too large
+
             if (start <= end - chunkSize) {
                 start = end;
             }

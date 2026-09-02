@@ -55,8 +55,6 @@ public class RagEngine {
         }
 
         // 1. Retrieve Candidate Chunks
-        // specificDocId == -1 means "No Context (General Offline AI)": skip retrieval entirely.
-        // specificDocId == null means "All Documents". A positive id targets a single document.
         List<DocumentChunk> candidates;
         if (specificDocId != null && specificDocId == -1) {
             candidates = Collections.emptyList();
@@ -93,9 +91,13 @@ public class RagEngine {
             float[] chunkVector = embeddingService.deserializeVector(chunk.embeddingVector);
             float cosine = embeddingService.cosineSimilarity(queryVector, chunkVector);
 
-            float keywordMatch = computeKeywordMatchScore(queryTokens, chunk.chunkText);
-            float combined = (cosine * 0.65f) + (keywordMatch * 0.35f);
+            float keywordMatch = NativeEngine.computeKeywordMatchScore(query, chunk.chunkText);
+            if (keywordMatch < 0.0f) {
+                // Java fallback
+                keywordMatch = computeKeywordMatchScore(queryTokens, chunk.chunkText);
+            }
 
+            float combined = (cosine * 0.65f) + (keywordMatch * 0.35f);
             scored.add(new RetrievedChunk(chunk, combined, cosine, keywordMatch));
         }
 
@@ -116,7 +118,6 @@ public class RagEngine {
 
         sb.append("Based on **").append(docTitle).append("** (retrieved with ").append(String.format(Locale.US, "%.0f%%", bestChunk.combinedScore * 100)).append(" relevance):\n\n");
 
-        // Extract key sentences matching the query
         String content = bestChunk.chunk.chunkText;
         String[] lines = content.split("\n");
         boolean addedPoint = false;
@@ -138,7 +139,6 @@ public class RagEngine {
             sb.append(content).append("\n\n");
         }
 
-        // Secondary supporting chunk if available
         if (topChunks.size() > 1 && topChunks.get(1).combinedScore >= 0.25f) {
             RetrievedChunk secondChunk = topChunks.get(1);
             sb.append("\n**Additional Relevant Context:**\n");
@@ -196,7 +196,6 @@ public class RagEngine {
                    "• **Right to Constitutional Remedies** (Article 32 - Supreme Court Writs)";
         }
 
-        // General fallback
         return "I processed your query: **\"" + query + "\"**.\n\n" +
                "To get precise document-backed answers, you can attach a PDF, text file, or image in the Documents or Chat screen.\n\n" +
                "*Processed on-device using " + modelName + ".*";
@@ -227,4 +226,3 @@ public class RagEngine {
         return (float) matched / (float) queryTokens.size();
     }
 }
-

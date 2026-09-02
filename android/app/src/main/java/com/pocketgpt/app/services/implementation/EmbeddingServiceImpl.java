@@ -1,6 +1,7 @@
 package com.pocketgpt.app.services.implementation;
 
 import com.pocketgpt.app.services.EmbeddingService;
+import com.pocketgpt.app.utils.NativeEngine;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,7 +10,7 @@ import java.util.Set;
 
 /**
  * High-performance on-device feature hashing & TF-IDF embedding service.
- * Produces deterministic, unit-normalized vector embeddings for local RAG retrieval.
+ * Accelerates vector operations using native C++ via JNI (NativeEngine).
  */
 public class EmbeddingServiceImpl implements EmbeddingService {
 
@@ -26,28 +27,33 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
     @Override
     public float[] generateEmbedding(String text) {
-        float[] vector = new float[DIMENSION];
         if (text == null || text.trim().isEmpty()) {
-            return vector;
+            return new float[DIMENSION];
         }
 
+        // Try high-performance C++ Native Engine
+        if (NativeEngine.isLoaded()) {
+            float[] nativeVec = NativeEngine.generateFastEmbedding(text, DIMENSION);
+            if (nativeVec != null && nativeVec.length == DIMENSION) {
+                return nativeVec;
+            }
+        }
+
+        // Fallback Java Implementation
+        float[] vector = new float[DIMENSION];
         String normalized = text.toLowerCase().replaceAll("[^a-z0-9\\s]", " ");
         String[] tokens = normalized.split("\\s+");
 
-        int validTokens = 0;
         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i].trim();
             if (token.isEmpty() || STOP_WORDS.contains(token)) {
                 continue;
             }
-            validTokens++;
 
-            // 1. Single word hash projection
             int h1 = Math.abs(hashString(token, 0x9747b28c)) % DIMENSION;
             int sign1 = ((token.hashCode() & 1) == 0) ? 1 : -1;
             vector[h1] += sign1 * 1.5f;
 
-            // 2. Bigram context hash projection
             if (i < tokens.length - 1 && !tokens[i + 1].trim().isEmpty()) {
                 String bigram = token + "_" + tokens[i + 1].trim();
                 int h2 = Math.abs(hashString(bigram, 0x5bd1e995)) % DIMENSION;
@@ -55,7 +61,6 @@ public class EmbeddingServiceImpl implements EmbeddingService {
                 vector[h2] += sign2 * 2.0f;
             }
 
-            // 3. Substring 3-gram character features
             if (token.length() >= 3) {
                 for (int c = 0; c <= token.length() - 3; c++) {
                     String sub = token.substring(c, c + 3);
@@ -65,7 +70,6 @@ public class EmbeddingServiceImpl implements EmbeddingService {
             }
         }
 
-        // L2 Unit Normalization
         float norm = 0.0f;
         for (float v : vector) {
             norm += v * v;
@@ -92,14 +96,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
     @Override
     public float cosineSimilarity(float[] v1, float[] v2) {
-        if (v1 == null || v2 == null || v1.length != v2.length) {
-            return 0.0f;
-        }
-        float dot = 0.0f;
-        for (int i = 0; i < v1.length; i++) {
-            dot += v1[i] * v2[i];
-        }
-        return Math.max(0.0f, Math.min(1.0f, dot));
+        return NativeEngine.computeCosineSimilarity(v1, v2);
     }
 
     @Override
@@ -140,4 +137,3 @@ public class EmbeddingServiceImpl implements EmbeddingService {
         return hash;
     }
 }
-
