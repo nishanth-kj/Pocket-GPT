@@ -5,6 +5,7 @@ plugins {
 android {
     namespace 'com.pocketgpt.app'
     compileSdk 34
+    ndkVersion "27.0.12077973"
 
     defaultConfig {
         applicationId "com.pocketgpt.app"
@@ -12,7 +13,14 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
-        
+
+        ndk {
+            // Real GGUF/llama.cpp inference only matters on real ARM64 hardware
+            // and the x86_64 emulator; skipping 32-bit ABIs keeps native build
+            // times and APK size down significantly.
+            abiFilters "arm64-v8a", "x86_64"
+        }
+
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
@@ -47,6 +55,9 @@ android {
 }
 
 dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

@@ -146,10 +146,10 @@ public class ModelManager {
                 "smollm-135m",
                 "SmolLM 135M",
                 "Hugging Face (TensorBlock)",
-                "85 MB",
+                "95 MB",
                 "Ultra-fast mobile SLM for instant on-device queries",
-                "https://huggingface.co/tensorblock/SmolLM-135M-Instruct-GGUF/resolve/main/SmolLM-135M-Instruct-Q4_K_M.gguf",
-                "SmolLM-135M-Instruct-Q4_K_M.gguf"));
+                "https://huggingface.co/tensorblock/SmolLM-135M-Instruct-GGUF/resolve/main/SmolLM-135M-Instruct-Q3_K_M.gguf",
+                "SmolLM-135M-Instruct-Q3_K_M.gguf"));
 
         modelCatalog.put("qwen-0.5b", new AiModel(
                 "qwen-0.5b",

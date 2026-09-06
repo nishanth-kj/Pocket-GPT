@@ -1,6 +1,8 @@
 package com.pocketgpt.app.utils;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import com.pocketgpt.app.model.AiModel;
 import com.pocketgpt.app.model.DocumentChunk;
 import com.pocketgpt.app.repository.SearchDao;
@@ -10,10 +12,28 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+/**
+ * Retrieval-Augmented Generation pipeline: retrieves the most relevant
+ * locally indexed document chunks for a query, then streams a real answer
+ * from the on-device GGUF model (via {@link LlamaEngine}) grounded in that
+ * retrieved context.
+ */
 public class RagEngine {
+
+    private static final float RELEVANCE_THRESHOLD = 0.20f;
+    private static final int CONTEXT_SIZE = 2048;
+    private static final int MAX_NEW_TOKENS = 384;
+    private static final float TEMPERATURE = 0.7f;
+
+    // Retrieval (Room DB + embedding) work must never run on the caller's
+    // thread, since answerQueryStreaming is called directly from the main
+    // thread by ChatFragment.
+    private static final ExecutorService RETRIEVAL_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     public static class RetrievedChunk {
         public final DocumentChunk chunk;
@@ -43,39 +63,101 @@ public class RagEngine {
         }
     }
 
-    public static RagResult answerQuery(Context context, String query, Integer specificDocId) {
-        long startTime = System.currentTimeMillis();
-        SearchDao dao = PocketGptDatabase.getDatabase(context).searchDao();
-        EmbeddingService embeddingService = EmbeddingService.create();
-        AiModel activeModel = ModelManager.getInstance(context).getActiveModel();
-        String modelName = activeModel != null ? activeModel.getName() : "Gemma 2B";
+    public interface StreamListener {
+        void onToken(String piece);
 
-        if (query == null || query.trim().isEmpty()) {
-            return new RagResult("Please enter a question or topic to search.", List.of(), modelName, 0);
+        void onComplete(RagResult result);
+
+        void onError(String message);
+    }
+
+    /**
+     * Retrieves context and streams a real, on-device generated answer.
+     * All callbacks are delivered on the main thread.
+     */
+    public static void answerQueryStreaming(Context context, String query, Integer specificDocId, StreamListener listener) {
+        RETRIEVAL_EXECUTOR.execute(() -> {
+            long startTime = System.currentTimeMillis();
+            SearchDao dao = PocketGptDatabase.getDatabase(context).searchDao();
+            EmbeddingService embeddingService = EmbeddingService.create();
+            AiModel activeModel = ModelManager.getInstance(context).getActiveModel();
+            String modelName = activeModel != null ? activeModel.getName() : "Pocket GPT";
+
+            if (query == null || query.trim().isEmpty()) {
+                MAIN_HANDLER.post(() -> listener.onComplete(
+                        new RagResult("Please enter a question or topic to search.", List.of(), modelName, 0)));
+                return;
+            }
+
+            List<DocumentChunk> candidates;
+            if (specificDocId != null && specificDocId == -1) {
+                candidates = Collections.emptyList();
+            } else if (specificDocId != null && specificDocId > 0) {
+                candidates = dao.getChunksForDocument(specificDocId);
+            } else {
+                candidates = dao.getAllChunks();
+            }
+
+            List<RetrievedChunk> topChunks = rankChunks(query, candidates, embeddingService, 3);
+            boolean hasContext = !topChunks.isEmpty() && topChunks.get(0).combinedScore >= RELEVANCE_THRESHOLD;
+
+            if (activeModel == null || !activeModel.isDownloaded() || activeModel.getLocalFilePath() == null) {
+                String msg = "No offline AI model is downloaded yet.\n\nGo to the **Models** tab and download one (e.g. SmolLM 135M is a good fast starting point) to start chatting.";
+                long elapsed = System.currentTimeMillis() - startTime;
+                MAIN_HANDLER.post(() -> listener.onComplete(new RagResult(msg, topChunks, modelName, elapsed)));
+                return;
+            }
+
+            String systemPrompt = buildSystemPrompt(topChunks, hasContext);
+            String modelPath = activeModel.getLocalFilePath();
+
+            LlamaEngine engine = LlamaEngine.getInstance();
+            engine.ensureModelLoaded(modelPath, CONTEXT_SIZE, new LlamaEngine.ModelLoadListener() {
+                @Override
+                public void onReady() {
+                    engine.generateAsync(systemPrompt, query, MAX_NEW_TOKENS, TEMPERATURE, new LlamaEngine.GenerationListener() {
+                        @Override
+                        public void onToken(String piece) {
+                            listener.onToken(piece);
+                        }
+
+                        @Override
+                        public void onComplete(String fullText, long elapsedMs) {
+                            String answer = fullText.trim();
+                            if (answer.isEmpty()) {
+                                answer = "(The model returned an empty response. Try rephrasing your question.)";
+                            }
+                            listener.onComplete(new RagResult(answer, topChunks, modelName, elapsedMs));
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            listener.onError(message);
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailed(String message) {
+                    listener.onError("Failed to load " + modelName + ": " + message);
+                }
+            });
+        });
+    }
+
+    private static String buildSystemPrompt(List<RetrievedChunk> topChunks, boolean hasContext) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("You are Pocket GPT, a private, 100% on-device AI assistant. Answer the user's question clearly and concisely.");
+
+        if (hasContext) {
+            sb.append(" Use the following context retrieved from the user's own documents to answer. ")
+              .append("If the context does not actually help answer the question, ignore it and answer from general knowledge instead.\n\nContext:\n");
+            for (RetrievedChunk rc : topChunks) {
+                if (rc.combinedScore < RELEVANCE_THRESHOLD) continue;
+                sb.append("---\n").append(rc.chunk.chunkText.trim()).append("\n");
+            }
         }
-
-        // 1. Retrieve Candidate Chunks
-        List<DocumentChunk> candidates;
-        if (specificDocId != null && specificDocId == -1) {
-            candidates = Collections.emptyList();
-        } else if (specificDocId != null && specificDocId > 0) {
-            candidates = dao.getChunksForDocument(specificDocId);
-        } else {
-            candidates = dao.getAllChunks();
-        }
-
-        List<RetrievedChunk> topChunks = rankChunks(query, candidates, embeddingService, 3);
-
-        // 2. Synthesize Answer
-        String answer;
-        if (!topChunks.isEmpty() && topChunks.get(0).combinedScore >= 0.20f) {
-            answer = synthesizeRAGAnswer(query, topChunks, modelName);
-        } else {
-            answer = synthesizeGeneralAnswer(query, modelName);
-        }
-
-        long elapsed = System.currentTimeMillis() - startTime;
-        return new RagResult(answer, topChunks, modelName, elapsed);
+        return sb.toString();
     }
 
     public static List<RetrievedChunk> rankChunks(String query, List<DocumentChunk> candidates, EmbeddingService embeddingService, int topK) {
@@ -108,97 +190,6 @@ public class RagEngine {
             result.add(scored.get(i));
         }
         return result;
-    }
-
-    private static String synthesizeRAGAnswer(String query, List<RetrievedChunk> topChunks, String modelName) {
-        StringBuilder sb = new StringBuilder();
-        
-        RetrievedChunk bestChunk = topChunks.get(0);
-        String docTitle = bestChunk.chunk.documentTitle != null ? bestChunk.chunk.documentTitle : "Attached Document";
-
-        sb.append("Based on **").append(docTitle).append("** (retrieved with ").append(String.format(Locale.US, "%.0f%%", bestChunk.combinedScore * 100)).append(" relevance):\n\n");
-
-        String content = bestChunk.chunk.chunkText;
-        String[] lines = content.split("\n");
-        boolean addedPoint = false;
-
-        for (String line : lines) {
-            String trimmed = line.trim();
-            if (trimmed.isEmpty()) continue;
-
-            if (trimmed.startsWith("-") || trimmed.startsWith("•") || trimmed.startsWith("1.") || trimmed.startsWith("2.") || trimmed.startsWith("3.") || trimmed.startsWith("4.") || trimmed.startsWith("5.")) {
-                sb.append("• ").append(trimmed.replaceAll("^[-•\\d.]+\\s*", "")).append("\n");
-                addedPoint = true;
-            } else if (trimmed.length() > 20) {
-                sb.append(trimmed).append("\n\n");
-                addedPoint = true;
-            }
-        }
-
-        if (!addedPoint) {
-            sb.append(content).append("\n\n");
-        }
-
-        if (topChunks.size() > 1 && topChunks.get(1).combinedScore >= 0.25f) {
-            RetrievedChunk secondChunk = topChunks.get(1);
-            sb.append("\n**Additional Relevant Context:**\n");
-            String secText = secondChunk.chunk.chunkText.trim();
-            if (secText.length() > 180) {
-                secText = secText.substring(0, 180) + "...";
-            }
-            sb.append(secText).append("\n");
-        }
-
-        sb.append("\n*Generated locally via ").append(modelName).append(" (100% On-Device RAG)*");
-
-        return sb.toString();
-    }
-
-    private static String synthesizeGeneralAnswer(String query, String modelName) {
-        String lower = query.toLowerCase();
-
-        if (lower.contains("hello") || lower.contains("hi") || lower.contains("hey")) {
-            return "Hello! I am Pocket GPT, your 100% offline on-device AI assistant powered by **" + modelName + "**.\n\n" +
-                   "I can answer questions using local Retrieval-Augmented Generation (RAG) on your documents, PDFs, and scanned texts without transmitting any data to the cloud.";
-        }
-
-        if (lower.contains("who are you") || lower.contains("what is pocket gpt") || lower.contains("how do you work")) {
-            return "**Pocket GPT** is a private, on-device AI assistant.\n\n" +
-                   "• **Vector Embeddings:** Generated and stored in your local Room/SQLite database.\n" +
-                   "• **Semantic Search:** Performs Cosine Similarity & keyword matching on-device.\n" +
-                   "• **Privacy:** Your documents and queries never leave this phone.\n" +
-                   "• **Current Model:** " + modelName;
-        }
-
-        if (lower.contains("ccpa") || lower.contains("california")) {
-            return "The **California Consumer Privacy Act (CCPA)** empowers consumers with:\n\n" +
-                   "1. **Right to Know:** What personal info is collected, used, and sold.\n" +
-                   "2. **Right to Delete:** Request deletion of personal data.\n" +
-                   "3. **Right to Opt-Out:** Prohibit selling or sharing of personal data.\n" +
-                   "4. **Right to Non-Discrimination:** Equal service and pricing.\n\n" +
-                   "Tip: Load the CCPA sample document in the Documents tab for deep context queries!";
-        }
-
-        if (lower.contains("gdpr")) {
-            return "The **General Data Protection Regulation (GDPR)** mandates:\n\n" +
-                   "• Core principles: Data minimization, purpose limitation, accuracy, and security.\n" +
-                   "• Rights: Access (Art. 15), Rectification (Art. 16), Erasure / Right to be forgotten (Art. 17).\n" +
-                   "• Breach Notification: Must notify authorities within 72 hours.\n" +
-                   "• Fines: Up to €20 million or 4% of global turnover.";
-        }
-
-        if (lower.contains("constitution") || lower.contains("fundamental rights")) {
-            return "Part III of the **Constitution of India** guarantees Fundamental Rights:\n\n" +
-                   "• **Right to Equality** (Articles 14-18)\n" +
-                   "• **Right to Freedom** (Articles 19-22, including privacy & expression)\n" +
-                   "• **Right against Exploitation** (Articles 23-24)\n" +
-                   "• **Right to Freedom of Religion** (Articles 25-28)\n" +
-                   "• **Right to Constitutional Remedies** (Article 32 - Supreme Court Writs)";
-        }
-
-        return "I processed your query: **\"" + query + "\"**.\n\n" +
-               "To get precise document-backed answers, you can attach a PDF, text file, or image in the Documents or Chat screen.\n\n" +
-               "*Processed on-device using " + modelName + ".*";
     }
 
     private static Set<String> tokenize(String text) {

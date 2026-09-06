@@ -382,14 +382,19 @@ public class ChatFragment extends Fragment {
         ragProgressBar.setVisibility(View.VISIBLE);
         sendButton.setEnabled(false);
 
-        Integer targetDocId = isGeneralChatOnly ? -1 : selectedDocId;
+        Integer targetDocId;
+        if (isGeneralChatOnly) {
+            targetDocId = -1;
+        } else {
+            targetDocId = selectedDocId;
+        }
 
         executorService.execute(() -> {
             if (getContext() == null) return;
 
             ChatDao chatDao = PocketGptDatabase.getDatabase(requireContext()).chatDao();
 
-            // 1. Create or get session
+            // Create or get session
             if (currentSessionId == null) {
                 String sessionTitle = message.length() > 40 ? message.substring(0, 40) + "..." : message;
                 int docId = targetDocId != null ? targetDocId : -1;
@@ -412,46 +417,84 @@ public class ChatFragment extends Fragment {
             );
             chatDao.insertMessage(userEntity);
 
-            // 2. Answer Query via RAG
-            RagEngine.RagResult result = RagEngine.answerQuery(requireContext(), message, targetDocId);
+            mainHandler.post(() -> beginStreamingAnswer(message, targetDocId));
+        });
+    }
 
-            // Save Assistant message entity
+    private int tokensSinceLastScroll = 0;
+
+    private void beginStreamingAnswer(String message, Integer targetDocId) {
+        if (getContext() == null) return;
+
+        ChatMessage placeholder = new ChatMessage(ChatMessage.TYPE_ASSISTANT, "");
+        chatAdapter.addMessage(placeholder);
+        chatRecyclerView.smoothScrollToPosition(chatAdapter.getItemCount() - 1);
+        tokensSinceLastScroll = 0;
+
+        RagEngine.answerQueryStreaming(requireContext(), message, targetDocId, new RagEngine.StreamListener() {
+            @Override
+            public void onToken(String piece) {
+                if (getContext() == null) return;
+                chatAdapter.appendToLastMessage(piece);
+
+                // Auto-scroll periodically rather than on every token, to stay
+                // smooth and avoid fighting the user if they scrolled up to read.
+                tokensSinceLastScroll++;
+                LinearLayoutManager lm = (LinearLayoutManager) chatRecyclerView.getLayoutManager();
+                boolean nearBottom = lm != null
+                        && lm.findLastVisibleItemPosition() >= chatAdapter.getItemCount() - 2;
+                if (nearBottom && tokensSinceLastScroll >= 8) {
+                    tokensSinceLastScroll = 0;
+                    chatRecyclerView.scrollToPosition(chatAdapter.getItemCount() - 1);
+                }
+            }
+
+            @Override
+            public void onComplete(RagEngine.RagResult result) {
+                if (getContext() == null) return;
+                ragProgressBar.setVisibility(View.GONE);
+                sendButton.setEnabled(true);
+                chatAdapter.finalizeLastMessage(result.answer, result.modelName, result.sources, result.processingTimeMs);
+                chatRecyclerView.smoothScrollToPosition(chatAdapter.getItemCount() - 1);
+                persistAssistantMessage(result.answer, result.modelName, result.processingTimeMs);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                if (getContext() == null) return;
+                ragProgressBar.setVisibility(View.GONE);
+                sendButton.setEnabled(true);
+                String errorText = "Sorry, generation failed: " + errorMessage;
+                chatAdapter.finalizeLastMessage(errorText, "Pocket GPT", null, 0);
+                persistAssistantMessage(errorText, "Pocket GPT", 0);
+            }
+        });
+    }
+
+    private void persistAssistantMessage(String answer, String modelName, long latencyMs) {
+        Integer sessionId = currentSessionId;
+        if (sessionId == null) return;
+        executorService.execute(() -> {
+            if (getContext() == null) return;
+            ChatDao chatDao = PocketGptDatabase.getDatabase(requireContext()).chatDao();
             ChatMessageEntity assistantEntity = new ChatMessageEntity(
-                    currentSessionId,
+                    sessionId,
                     ChatMessage.TYPE_ASSISTANT,
-                    result.answer,
-                    result.modelName,
+                    answer,
+                    modelName,
                     "Now",
-                    result.processingTimeMs,
+                    latencyMs,
                     null
             );
             chatDao.insertMessage(assistantEntity);
 
-            // Update session
-            ChatSession session = chatDao.getSessionById(currentSessionId);
+            ChatSession session = chatDao.getSessionById(sessionId);
             if (session != null) {
-                session.lastMessage = result.answer;
-                session.messageCount = chatDao.getMessagesForSession(currentSessionId).size();
+                session.lastMessage = answer;
+                session.messageCount = chatDao.getMessagesForSession(sessionId).size();
                 session.updatedAt = System.currentTimeMillis();
                 chatDao.updateSession(session);
             }
-
-            mainHandler.post(() -> {
-                ragProgressBar.setVisibility(View.GONE);
-                sendButton.setEnabled(true);
-
-                if (getContext() != null) {
-                    ChatMessage assistantMsg = new ChatMessage(
-                            ChatMessage.TYPE_ASSISTANT,
-                            result.answer,
-                            result.modelName,
-                            result.sources,
-                            result.processingTimeMs
-                    );
-                    chatAdapter.addMessage(assistantMsg);
-                    chatRecyclerView.smoothScrollToPosition(chatAdapter.getItemCount() - 1);
-                }
-            });
         });
     }
 

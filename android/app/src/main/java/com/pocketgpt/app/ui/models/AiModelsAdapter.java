@@ -1,6 +1,7 @@
 package com.pocketgpt.app.ui.models;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,11 +9,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.pocketgpt.app.R;
 import com.pocketgpt.app.model.AiModel;
+import com.pocketgpt.app.services.implementation.ModelDownloadService;
 import com.pocketgpt.app.utils.ModelManager;
 
 import java.io.File;
@@ -135,6 +138,13 @@ public class AiModelsAdapter extends RecyclerView.Adapter<AiModelsAdapter.ViewHo
                 }
 
                 Toast.makeText(context, "Connecting to Hugging Face CDN for " + model.getName() + "...", Toast.LENGTH_SHORT).show();
+
+                // Run at foreground-service priority with a persistent progress
+                // notification so the download survives the app being backgrounded.
+                Intent serviceIntent = new Intent(context, ModelDownloadService.class);
+                serviceIntent.putExtra(ModelDownloadService.EXTRA_MODEL_ID, model.getId());
+                ContextCompat.startForegroundService(context, serviceIntent);
+
                 manager.downloadModel(model.getId(), new ModelManager.ModelDownloadListener() {
                     @Override
                     public void onProgress(String modelId, int progressPercent, String statusMessage) {
