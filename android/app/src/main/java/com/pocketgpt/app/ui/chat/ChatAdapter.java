@@ -25,6 +25,8 @@ import java.util.Locale;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private static final String PAYLOAD_STREAM_UPDATE = "stream_update";
+
     private final List<ChatMessage> messages = new ArrayList<>();
 
     public void addMessage(ChatMessage message) {
@@ -47,6 +49,31 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public List<ChatMessage> getMessages() {
         return messages;
+    }
+
+    /**
+     * Appends a streamed token to the last message and refreshes only its
+     * text view (no citations/click-listener rebind) for smooth real-time
+     * rendering while the model is still generating.
+     */
+    public void appendToLastMessage(String piece) {
+        if (messages.isEmpty() || piece == null || piece.isEmpty()) return;
+        int lastIndex = messages.size() - 1;
+        ChatMessage last = messages.get(lastIndex);
+        last.setContent(last.getContent() + piece);
+        notifyItemChanged(lastIndex, PAYLOAD_STREAM_UPDATE);
+    }
+
+    /** Replaces the last message's content with the final answer and full metadata. */
+    public void finalizeLastMessage(String fullText, String modelName, List<RagEngine.RetrievedChunk> sources, long latencyMs) {
+        if (messages.isEmpty()) return;
+        int lastIndex = messages.size() - 1;
+        ChatMessage last = messages.get(lastIndex);
+        last.setContent(fullText);
+        last.setModelName(modelName);
+        last.setSources(sources);
+        last.setLatencyMs(latencyMs);
+        notifyItemChanged(lastIndex);
     }
 
     @Override
@@ -75,6 +102,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else if (holder instanceof AssistantViewHolder) {
             ((AssistantViewHolder) holder).bind(message);
         }
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (payloads.contains(PAYLOAD_STREAM_UPDATE) && holder instanceof AssistantViewHolder) {
+            ((AssistantViewHolder) holder).updateStreamingText(messages.get(position).getContent());
+            return;
+        }
+        super.onBindViewHolder(holder, position, payloads);
     }
 
     @Override
@@ -125,13 +161,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 model += " • Offline";
             }
             textAssistantStats.setText(model);
-
-            // Render formatted markdown/bold text cleanly
-            String formattedHtml = TextUtils.htmlEncode(message.getContent())
-                    .replace("\n", "<br/>")
-                    .replaceAll("\\*\\*(.*?)\\*\\*", "<b>$1</b>")
-                    .replaceAll("\\*(.*?)\\*", "<i>$1</i>");
-            textAssistantMessage.setText(Html.fromHtml(formattedHtml, Html.FROM_HTML_MODE_COMPACT));
+            updateStreamingText(message.getContent());
 
             // Render Sources
             List<RagEngine.RetrievedChunk> sources = message.getSources();
@@ -164,6 +194,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             // Copy to Clipboard
             btnCopyClick(context, message);
+        }
+
+        /** Renders just the message text (markdown-lite formatting), without touching citations or listeners. */
+        void updateStreamingText(String content) {
+            String formattedHtml = TextUtils.htmlEncode(content)
+                    .replace("\n", "<br/>")
+                    .replaceAll("\\*\\*(.*?)\\*\\*", "<b>$1</b>")
+                    .replaceAll("\\*(.*?)\\*", "<i>$1</i>");
+            textAssistantMessage.setText(Html.fromHtml(formattedHtml, Html.FROM_HTML_MODE_COMPACT));
         }
 
         private void btnCopyClick(Context context, ChatMessage message) {

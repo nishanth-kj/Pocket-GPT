@@ -1,7 +1,13 @@
 package com.pocketgpt.app.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.File;
 
+@Data
+@NoArgsConstructor
 public class AiModel {
     private String id;
     private String name;
@@ -13,10 +19,10 @@ public class AiModel {
     private String localFilePath;
     private long localFileSizeBytes = 0;
     private String downloadStatusMessage = "";
-    private boolean isDownloaded;
-    private boolean isDownloading;
+    private boolean downloaded;
+    private boolean downloading;
     private int downloadProgress = 0;
-    private boolean isActive;
+    private boolean active;
 
     public AiModel(String id, String name, String publisher, String sizeFormatted, String description, String downloadUrl, String fileName) {
         this.id = id;
@@ -26,102 +32,10 @@ public class AiModel {
         this.description = description;
         this.downloadUrl = downloadUrl;
         this.fileName = fileName;
-        this.isDownloaded = false;
-        this.isDownloading = false;
+        this.downloaded = false;
+        this.downloading = false;
         this.downloadProgress = 0;
-        this.isActive = false;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPublisher() {
-        return publisher;
-    }
-
-    public String getSizeFormatted() {
-        return sizeFormatted;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getDownloadUrl() {
-        return downloadUrl;
-    }
-
-    public void setDownloadUrl(String downloadUrl) {
-        this.downloadUrl = downloadUrl;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getLocalFilePath() {
-        return localFilePath;
-    }
-
-    public void setLocalFilePath(String localFilePath) {
-        this.localFilePath = localFilePath;
-    }
-
-    public long getLocalFileSizeBytes() {
-        return localFileSizeBytes;
-    }
-
-    public void setLocalFileSizeBytes(long localFileSizeBytes) {
-        this.localFileSizeBytes = localFileSizeBytes;
-    }
-
-    public String getDownloadStatusMessage() {
-        return downloadStatusMessage;
-    }
-
-    public void setDownloadStatusMessage(String downloadStatusMessage) {
-        this.downloadStatusMessage = downloadStatusMessage;
-    }
-
-    public boolean isDownloaded() {
-        return isDownloaded;
-    }
-
-    public void setDownloaded(boolean downloaded) {
-        isDownloaded = downloaded;
-    }
-
-    public boolean isDownloading() {
-        return isDownloading;
-    }
-
-    public void setDownloading(boolean downloading) {
-        isDownloading = downloading;
-    }
-
-    public int getDownloadProgress() {
-        return downloadProgress;
-    }
-
-    public void setDownloadProgress(int downloadProgress) {
-        this.downloadProgress = downloadProgress;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public void setActive(boolean active) {
-        isActive = active;
+        this.active = false;
     }
 
     public boolean checkFileExists() {
@@ -132,5 +46,3 @@ public class AiModel {
         return false;
     }
 }
-
-
